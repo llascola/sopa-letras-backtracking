@@ -427,23 +427,46 @@ def escribeSopa(n, archivoSalida, dicMatrizSopa):
         salida.write(linea)
     salida.close()
 
-def sopaDeLetras():
+def sopaDeLetras(n, complejidad, palabras):
+
+    palabras_sorted = sorted(palabras, key=len, reverse=True)
+    infoPalabras = { 'Lista': palabras_sorted }
+    for palabra in palabras_sorted:
+        infoPalabras[palabra] = generaDicPalabra(palabra)
+
+    dicMatrizSopa = generaDicMatriz(n)
+    
+    if armaMatrizSopa(n,complejidad,dicMatrizSopa,infoPalabras):
+        if completaSopa(n,dicMatrizSopa,infoPalabras):
+            return dicMatrizSopa
+    
+    return None
+
+def create_grid(words: list[str], size: int, complexity: int):
+    sopa = sopaDeLetras(size, complexity, words)
+    grilla = []
+    if sopa:
+        for fila in range(size):
+            fila_lista = []
+            for col in range(size):
+                fila_lista.append(sopa[(fila,col)][0]) 
+            grilla.append(fila_lista)
+        return grilla
+    else:
+        return []
+
+if __name__ == '__main__':
     DatosDeEntrada = lecturaInfoArchivo(argv[1])
     archivoSalida = argv[2]
     Dimension = DatosDeEntrada[0]
     infoPalabras = DatosDeEntrada[1]
     Complejidad = DatosDeEntrada[2]
-    MatrizSopa = generaDicMatriz(Dimension)
-    if armaMatrizSopa(Dimension,Complejidad,MatrizSopa,infoPalabras):
-        if completaSopa(Dimension,MatrizSopa,infoPalabras):
-            escribeSopa(Dimension,archivoSalida,MatrizSopa)
-            print('La sopa de letras se generó con éxito.')
-        else:
-            print('No se pudo completar la sopa de letras generada.')
+    sopa = sopaDeLetras(Dimension,Complejidad,infoPalabras)
+    if sopa:
+        escribeSopa(Dimension,archivoSalida,sopa)
+        print('La sopa de letras se generó con éxito.')
     else:
         print('No se pudo generar la sopa de letras.')
-
-#sopaDeLetras()
     
 
 

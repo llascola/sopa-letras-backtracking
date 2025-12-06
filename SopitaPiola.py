@@ -3,55 +3,6 @@ from sys import argv
 
 
 """
-    IDEAS GENERALES
-    La idea del programa es representar la sopa de letras como una matriz nxn, 
-     cuyo dominio que llameremos Posiciones son los pares ordenado (x,y) pertenecientes 
-     al conjunto [|0, n - 1|] x [|0, n - 1|], (ej. (4,5))
-     Los x complen el rol de fila de la sopa de letra y los y el rol de columna.
-     Y el  codomininio ({'a','b','c',...,'y','z'} x [|1, p]]) U {('-',0)} . 
-     donde p es la cantidad de palabras contenidas el la sopa de letras (ej. ('a', 3)).
-    El par (String, entero) indica una letra y en segundo plano la catidad de palabras
-    que relacionadas con el elemento del dominio.
-    El elemento ('-', 0) del codominio cumple el rol de "nulo", es decir, 
-    no hay ninguna (letra,contador) asignada al elemento del dominio.
-    Para esta representacion utilizaremo un diccionario Posiciones, donde cada clave del diccionario
-     representa una tupla (x,y) y es mapeada con una tupla (letra,contador). Ej. {(0,0) : ('g', 1)}
-    Una Palabra (String) es representada como vector dentro de la matriz, ya que esta tienen módulo
-     (Longitud del String) dirección (pares ordenados alineados) y sentido
-     ID y DI (palabras escritas de izquierda a derecha ('hola') y viceversa ('aloh')).
-    La Longitud y el sentido estan dados por el String y la direccion está dada por un
-     subconjuntos del domínio de la matriz que complen con las siguientes condiciones:
-        Sea k la longitud de alguna palabra y (i,j) el orígen de su vector asociado
-        - Dirección horizontal H = {(i,j),(i, j+1), ... , (i, j+(k-1))}, con  0 <= j+(k-1) <= n-1
-        - Dirección vertical V = {(i,j),(i+1,j),...,(i+(k-1),j)}, con 0 <= i+(k-1) <= n-1
-        - Dirección Diagonal de esquina sup. izq a Esquina inf der Dsi = {(i,j),(i+1,j+1),...,(i+(k-1),j+(k-1))},
-          con con 0 <= i+(k-1) <= n-1 y 0 <= j+(k-1) <= n-1
-        - Dirección Diagonal de esquina sup. der a Esquina inf izq Dsd = {(i,j),(i+1,j-1),...,(i+(k-1),j-(k-1))},
-          con con 0 <= i+(k-1) <= n-1 y 0 <= j-(k-1) <= n-1
-    La Complejidad de la sopa de letra nos ponen ciertas condiciones extras a los vectores:
-        - Facil : Vectores de tipo H o V sentido ID tales que sus respectivas posiciones
-                  sean disjuntas (no coparten posicion, por lo tanto, las palabras no se cruzan).
-        - Medio : Vectores de tipo H, V o Dsi con sentid ID tales que sus respectivas posiciones sean disjuntas.
-        - Dificil : Vectores de todo tipo, tales que sus respectivas posiciones sean disjuntas.
-        - Muy dificil: Vectores de todo tipo, tales que sus respectivas posiciones sean disjuntas
-                       o cada elemento de su intersección este mapeado a la misma letra
-    Como no todo combinacion de vectores es válida, y la elección de un vector condiciona la elección de 
-        otros vectores, llamaremos Candidatos al conjunto de vectores que
-        cumplen con las condiciones dadas por el tipo de complejidad y los candidatos elegidos previeamente.
-        La idea es elejir un cadidato por palabra y armar los candidatos para la proxima
-        palabra en función de los candidatos ya elejidos. 
-        Si al generar los candidatos para una palabra el resultado es el conjunto vacío,
-        se vuelve la palabra anterior y se prueba con otro candidato.
-        El proceso termina cuando se obtiene un candidato por palabra (se puede generar la sopa de letras)
-        o cuando el conjunto de candidatos es vacío para todas las palabras, lo cual implica que no 
-        es posible generar una sopa de letras con las palabras dadas y la complejidad.
-    Para poder generar Candidatos en funcion de las palabras ya elegidas se utiliza el diccionario
-    MatrizSopa para guardar información de los vectores ya elegidos y en paralelo
-    un diccionario infoPalabras, que guarda información de los candidatos en cada una de las palabras.
-    Una vez terminado el proceso de elección de Candidatos de forma satisfactoria, se completan las posiciones
-    mapeadas al elemento nulo con una letra al azar de forma que no se 
-        generen palabras repetidas y se obtiene una sopa de letras válidas para el enunciado.
-
     REPRESENTACIÓN DE DATOS
 
     Complejidad es un Int que representa la complejidad de la sopa de letras.
@@ -318,14 +269,19 @@ def borraPalabraMatriz(palabra, dicMatrizSopa, infoPalabras):
 
 def generaCandidatos(n, palabra, dicMatrizSopa, infoPalabras, complejidad):
     candidatos = []
+
     for Posiciones in generaPosiciones(n,infoPalabras[palabra]['Longitud'],complejidad):
         candidato = list(zip(Posiciones,palabra))
+
         if validaCandidato(candidato, dicMatrizSopa, complejidad):
             candidatos.append(candidato)
+
         if complejidad == 2 or complejidad == 3:
             candidato2 = list(zip(Posiciones,palabra[::-1]))
+
             if validaCandidato(candidato2, dicMatrizSopa, complejidad):
                 candidatos.append(candidato2)
+
     return candidatos
 
     
@@ -335,27 +291,43 @@ def generaCandidatos(n, palabra, dicMatrizSopa, infoPalabras, complejidad):
 #Caso contrario devulev False.
 
 def armaMatrizSopa(n, complejidad, dicMatrizSopa, infoPalabras, contador = 0):
+
     if contador == len(infoPalabras['Lista']):
+        #Todas las palabras asignadas
         return True
-    palabra = infoPalabras['Lista'][contador]
+
+    palabra = infoPalabras['Lista'][contador] # Candidato a asignar
+
     if infoPalabras[palabra]['Estado'] == True:
+        #Estado True implica que hay que generar los candidatos
+
         infoPalabras[palabra]['Candidatos'] = generaCandidatos(n, palabra, dicMatrizSopa, infoPalabras, complejidad)
         infoPalabras[palabra]['Estado'] = False
+
     if infoPalabras[palabra]['Candidatos'] == [] and contador == 0:
+        #No hay mas candidatos para la primera palabra, no es posible armar la sopa
+
         return False
+
     if infoPalabras[palabra]['Candidatos'] == []:
+        #No hay mas candidatos para la palabra actual, se vuelve a la anterior
+
         infoPalabras[palabra]['Estado'] = True
         contador -= 1
         palabra = infoPalabras['Lista'][contador]
         dicMatrizSopa = borraPalabraMatriz(palabra, dicMatrizSopa, infoPalabras)
         infoPalabras[palabra ]['Solucion?'] = []
         return armaMatrizSopa(n, complejidad, dicMatrizSopa, infoPalabras, contador)
+
     else:
+        #Se elige un candidato al azar y se remueve de la lista de candidatos
 
         infoPalabras[palabra]['Candidato'] = choice(infoPalabras[palabra]['Candidatos'])
         infoPalabras[palabra]['Candidatos'].remove(infoPalabras[palabra]['Candidato'])
         contador += 1
+
         dicMatrizSopa = actualizaMatriz(palabra,dicMatrizSopa,infoPalabras)
+
         return armaMatrizSopa(n, complejidad, dicMatrizSopa, infoPalabras, contador)
 
 #convierteListaLestraACadena: List(Char) -> String

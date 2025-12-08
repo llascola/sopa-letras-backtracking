@@ -1,0 +1,14 @@
+services:
+
+  sopa-de-letras:
+    build: ./sopa-letras-backtracking
+    container_name: sopa-de-letras
+    networks:
+      - web-page
+    ports:
+      - "8000:8000"
+    restart: always
+
+networks:
+  web-page:
+    external: true
